@@ -10,6 +10,7 @@ import ProductDetail from "./pages/shop/ProductDetail";
 import Cart from "./pages/shop/Cart";
 import Checkout from "./pages/shop/Checkout";
 import OrderConfirmation from "./pages/shop/OrderConfirmation";
+import AIShop from "./pages/AIShop";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,7 +22,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Navigate to="/shop" replace />} />
+          <Route path="/" element={<AIShop />} />
           <Route path="/admin" element={<ProductManagement />} />
           <Route path="/admin/orders" element={<OrderManagement />} />
           <Route path="/shop" element={<ProductListing />} />
