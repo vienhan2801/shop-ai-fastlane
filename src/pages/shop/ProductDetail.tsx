@@ -16,7 +16,7 @@ export default function ProductDetail() {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(0);
+  // const [selectedImage, setSelectedImage] = useState(0);
   const { toast } = useToast();
   const { addToCart } = useCart();
 
