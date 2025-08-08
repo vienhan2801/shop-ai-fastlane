@@ -4,14 +4,14 @@ import { ArrowLeft, ShoppingCart, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Product } from '@/lib/types';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/hooks/useCart';
 import { ChatInterface } from '@/components/ChatInterface';
+import { useAppStore, Product } from '@/lib/store';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
+  const { products } = useAppStore();
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,41 +24,20 @@ export default function ProductDetail() {
     if (id) {
       fetchProduct();
     }
-  }, [id]);
+  }, [id, products]);
 
-  const fetchProduct = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
+  const fetchProduct = () => {
+    const foundProduct = products.find(p => p.id === id);
+    if (foundProduct) {
+      setProduct(foundProduct);
       
-      setProduct(data);
-      
-      // Fetch related products (same category, excluding current product)
-      if (data.category) {
-        const { data: related } = await supabase
-          .from('products')
-          .select('*')
-          .eq('category', data.category)
-          .neq('id', data.id)
-          .gt('stock', 0)
-          .limit(4);
-        
-        setRelatedProducts(related || []);
-      }
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch product details',
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
+      // Get related products
+      const related = products
+        .filter(p => p.id !== id && p.category === foundProduct.category)
+        .slice(0, 4);
+      setRelatedProducts(related);
     }
+    setLoading(false);
   };
 
   const handleAddToCart = () => {
@@ -107,7 +86,7 @@ export default function ProductDetail() {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-4">
             <h1 className="text-2xl font-bold">Không tìm thấy sản phẩm</h1>
-            <Link to="/">
+            <Link to="/shop">
               <Button>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Quay lại trang chủ
@@ -131,7 +110,7 @@ export default function ProductDetail() {
         {/* Header */}
         <div className="p-6 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex items-center justify-between">
-            <Link to="/">
+            <Link to="/shop">
               <Button variant="outline" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Quay lại trang chủ
@@ -149,38 +128,15 @@ export default function ProductDetail() {
             {/* Product Images */}
             <div className="space-y-4">
               <div className="aspect-square bg-muted rounded-lg overflow-hidden">
-                {product.images && product.images.length > 0 ? (
-                  <img
-                    src={product.images[selectedImage] || product.images[0]}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                    Không có hình ảnh
-                  </div>
-                )}
+                <img
+                  src={product.thumbnail}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=800&fit=crop';
+                  }}
+                />
               </div>
-              
-              {product.images && product.images.length > 1 && (
-                <div className="flex space-x-2 overflow-x-auto">
-                  {product.images.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      className={`w-20 h-20 rounded-lg overflow-hidden border-2 shrink-0 ${
-                        selectedImage === index ? 'border-primary' : 'border-border'
-                      }`}
-                    >
-                      <img
-                        src={image}
-                        alt={`${product.name} ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Product Info */}
@@ -199,18 +155,24 @@ export default function ProductDetail() {
                   <span className="text-3xl font-bold text-primary">
                     {formatPrice(product.price)}
                   </span>
-                  <div className="flex gap-1">
-                    <Badge variant="outline" className="text-xs">
-                      Chính Hãng
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      Free Ship
-                    </Badge>
-                  </div>
+                  {product.badges && product.badges.length > 0 && (
+                    <div className="flex gap-1">
+                      {product.badges.map((badge, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {badge}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {product.description && (
+                {product.shortDescription && (
                   <p className="text-muted-foreground leading-relaxed">
+                    {product.shortDescription}
+                  </p>
+                )}
+                {product.description && product.description !== product.shortDescription && (
+                  <p className="text-muted-foreground leading-relaxed text-sm">
                     {product.description}
                   </p>
                 )}
@@ -268,17 +230,16 @@ export default function ProductDetail() {
                     key={relatedProduct.id} 
                     className="group overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer"
                   >
-                    <Link to={`/product/${relatedProduct.id}`}>
+                    <Link to={`/shop/${relatedProduct.id}`}>
                       <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
-                        {relatedProduct.images && relatedProduct.images.length > 0 ? (
-                          <img
-                            src={relatedProduct.images[0]}
-                            alt={relatedProduct.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className="text-muted-foreground">Không có hình ảnh</div>
-                        )}
+                        <img
+                          src={relatedProduct.thumbnail}
+                          alt={relatedProduct.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop';
+                          }}
+                        />
                       </div>
                     </Link>
                     <CardContent className="p-4">
@@ -290,11 +251,15 @@ export default function ProductDetail() {
                           <span className="text-lg font-bold text-primary">
                             {formatPrice(relatedProduct.price)}
                           </span>
-                          <div className="flex gap-1">
-                            <Badge variant="outline" className="text-xs">
-                              Chính Hãng
-                            </Badge>
-                          </div>
+                          {relatedProduct.badges && relatedProduct.badges.length > 0 && (
+                            <div className="flex gap-1">
+                              {relatedProduct.badges.slice(0, 1).map((badge, index) => (
+                                <Badge key={index} variant="outline" className="text-xs">
+                                  {badge}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </CardContent>

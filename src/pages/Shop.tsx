@@ -1,0 +1,180 @@
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingCart, RotateCcw, Maximize, X, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { useCart } from '@/hooks/useCart';
+import { ChatInterface } from '@/components/ChatInterface';
+import { useAppStore, Product } from '@/lib/store';
+
+export default function Shop() {
+  const navigate = useNavigate();
+  const { survey, products, reset } = useAppStore();
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const { addToCart } = useCart();
+
+  useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleAddToCart = (product: Product) => {
+    addToCart(product);
+    toast({
+      title: 'Đã thêm vào giỏ hàng',
+      description: `${product.name} đã được thêm vào giỏ hàng của bạn`
+    });
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(price);
+  };
+
+  const handleReset = () => {
+    reset();
+    navigate('/onboard');
+  };
+
+  return (
+    <div className="h-screen flex bg-background">
+      {/* Left Column - Sticky AI Chat Interface */}
+      <div className="w-1/3">
+        <ChatInterface />
+      </div>
+
+      {/* Right Column - Product Grid */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Header */}
+        <div className="sticky top-0 z-10 p-6 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" onClick={() => navigate('/analyze')}>
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold">{survey?.shopName || 'Mini Shop AI'}</h1>
+                <p className="text-sm text-muted-foreground">
+                  {survey?.industry || 'Tổng hợp'} • {products.length} sản phẩm
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" title="Refresh">
+                <RotateCcw className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon" title="Fullscreen">
+                <Maximize className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon" title="Close">
+                <X className="w-4 h-4" />
+              </Button>
+              <Button variant="outline" onClick={handleReset}>
+                Tạo lại từ đầu
+              </Button>
+            </div>
+          </div>
+          
+          <div className="text-center">
+            <p className="text-muted-foreground">Khám phá sản phẩm tuyệt vời với giá cả hấp dẫn</p>
+          </div>
+        </div>
+
+        {/* Product Grid */}
+        <div className="p-6">
+          {loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-lg text-muted-foreground">Đang tải sản phẩm...</div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {products.map((product) => (
+                <Card 
+                  key={product.id} 
+                  className="group overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer"
+                >
+                  <Link to={`/shop/${product.id}`}>
+                    <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
+                      <img
+                        src={product.thumbnail}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=400&fit=crop';
+                        }}
+                      />
+                    </div>
+                  </Link>
+                  
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <Link to={`/shop/${product.id}`}>
+                          <h3 className="font-semibold text-sm line-clamp-2 leading-tight hover:text-primary transition-colors">
+                            {product.name}
+                          </h3>
+                        </Link>
+                        {product.category && (
+                          <Badge variant="secondary" className="text-xs">
+                            {product.category}
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg font-bold text-primary">
+                          {formatPrice(product.price)}
+                        </span>
+                        {product.badges && product.badges.length > 0 && (
+                          <div className="flex gap-1">
+                            {product.badges.slice(0, 2).map((badge, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {badge}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="text-sm text-muted-foreground">
+                        Còn {product.stock || 10} sản phẩm
+                      </div>
+                      
+                      <Button
+                        size="sm"
+                        className="w-full"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleAddToCart(product);
+                        }}
+                      >
+                        <ShoppingCart className="w-4 h-4 mr-2" />
+                        Thêm vào giỏ
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {products.length === 0 && !loading && (
+            <div className="text-center py-12">
+              <p className="text-lg text-muted-foreground">Không có sản phẩm nào</p>
+              <Button variant="outline" className="mt-4" onClick={handleReset}>
+                Tạo shop mới
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

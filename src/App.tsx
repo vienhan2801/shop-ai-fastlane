@@ -10,7 +10,9 @@ import ProductDetail from "./pages/shop/ProductDetail";
 import Cart from "./pages/shop/Cart";
 import Checkout from "./pages/shop/Checkout";
 import OrderConfirmation from "./pages/shop/OrderConfirmation";
-import AIShop from "./pages/AIShop";
+import Onboard from "./pages/Onboard";
+import Analyze from "./pages/Analyze";
+import Shop from "./pages/Shop";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,10 +24,14 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<AIShop />} />
+          <Route path="/" element={<Navigate to="/onboard" replace />} />
+          <Route path="/onboard" element={<Onboard />} />
+          <Route path="/analyze" element={<Analyze />} />
+          <Route path="/shop" element={<Shop />} />
+          <Route path="/shop/:id" element={<ProductDetail />} />
           <Route path="/admin" element={<ProductManagement />} />
           <Route path="/admin/orders" element={<OrderManagement />} />
-          <Route path="/shop" element={<ProductListing />} />
+          <Route path="/products" element={<ProductListing />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
