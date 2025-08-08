@@ -94,14 +94,22 @@ export default function Shop() {
               <div className="text-lg text-muted-foreground">Đang tải sản phẩm...</div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
               {products.map((product) => (
                 <Card 
                   key={product.id} 
                   className="group overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer"
                 >
                   <Link to={`/shop/${product.id}`}>
-                    <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
+                    <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden relative">
+                      {product.listedPrice && product.listedPrice > product.price && (
+                        <span
+                          className="absolute top-2 right-2 z-10 px-2 py-1 rounded-lg bg-red-600 text-white text-xs font-bold shadow-lg animate-pulse"
+                          style={{ pointerEvents: 'none' }}
+                        >
+                          -{Math.round(100 - (product.price / product.listedPrice) * 100)}%
+                        </span>
+                      )}
                       <img
                         src={product.thumbnail}
                         alt={product.name}
@@ -115,24 +123,34 @@ export default function Shop() {
                   
                   <CardContent className="p-4">
                     <div className="space-y-3">
-                      <div className="space-y-1">
+                      <div>
+                        <div className='mb-1'>
+                          {product.category && (
+                          <Badge variant="secondary" className="text-xs">
+                            {product.category}
+                          </Badge>
+                        )}
+                        </div>
                         <Link to={`/shop/${product.id}`}>
                           <h3 className="font-semibold text-sm line-clamp-2 leading-tight hover:text-primary transition-colors">
                             {product.name}
                           </h3>
                         </Link>
-                        {product.category && (
-                          <Badge variant="secondary" className="text-xs">
-                            {product.category}
-                          </Badge>
-                        )}
                       </div>
                       
-                      <div className="flex items-center justify-between">
-                        <span className="text-lg font-bold text-primary">
-                          {formatPrice(product.price)}
-                        </span>
-                        {product.badges && product.badges.length > 0 && (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-bold text-primary">
+                            {formatPrice(product.price)}
+                          </span>
+                          {product.listedPrice && product.listedPrice > product.price && (
+                            <span className="text-sm text-muted-foreground line-through">
+                              {formatPrice(product.listedPrice)}
+                            </span>
+                          )}
+                        </div>
+                        <div className='flex items-center'>
+                          {product.badges && product.badges.length > 0 && (
                           <div className="flex gap-1">
                             {product.badges.slice(0, 2).map((badge, index) => (
                               <Badge key={index} variant="outline" className="text-xs">
@@ -141,10 +159,13 @@ export default function Shop() {
                             ))}
                           </div>
                         )}
+                        </div>
                       </div>
                       
-                      <div className="text-sm text-muted-foreground">
-                        Còn {product.stock || 10} sản phẩm
+                      <div>
+                        <Badge variant="destructive" className="text-xs px-2 py-1">
+                          Còn {product.stock ?? 10} sản phẩm
+                        </Badge>
                       </div>
                       
                       <Button

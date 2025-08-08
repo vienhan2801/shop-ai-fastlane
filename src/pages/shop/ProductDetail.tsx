@@ -20,6 +20,67 @@ export default function ProductDetail() {
   const { toast } = useToast();
   const { addToCart } = useCart();
 
+  const combos = [
+    {
+      id: 1,
+      name: 'Combo 3 Học Tập và Làm Việc',
+      products: [
+        {
+          id: 'c1-1',
+          name: 'Tai nghe dây chống ồn có mic',
+          price: 275000,
+          listedPrice: 440000,
+          thumbnail: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200&h=200&fit=crop',
+        },
+        {
+          id: 'c1-2',
+          name: 'Chuột không dây Targus W600',
+          price: 245000,
+          listedPrice: 319000,
+          thumbnail: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?w=200&h=200&fit=crop',
+        },
+        {
+          id: 'c1-3',
+          name: 'Giá đỡ tản nhiệt ICore LS102 Bạc',
+          price: 279000,
+          listedPrice: 399000,
+          thumbnail: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?w=200&h=200&fit=crop',
+        },
+      ],
+    },
+    {
+      id: 2,
+      name: 'Combo 2 Học Tập và Làm Việc',
+      products: [
+        {
+          id: 'c1-1',
+          name: 'Tai nghe dây chống ồn có mic',
+          price: 275000,
+          listedPrice: 440000,
+          thumbnail: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=200&h=200&fit=crop',
+        },
+        {
+          id: 'c1-2',
+          name: 'Chuột không dây Targus W600',
+          price: 245000,
+          listedPrice: 319000,
+          thumbnail: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?w=200&h=200&fit=crop',
+        },
+      ],
+    },
+  ];
+
+  const [selectedCombo, setSelectedCombo] = useState(combos[0]);
+
+  const getComboSummary = (combo) => {
+    const totalPrice = combo.products.reduce((sum, p) => sum + p.price, 0);
+    const totalListed = combo.products.reduce((sum, p) => sum + (p.listedPrice || p.price), 0);
+    const saving = totalListed - totalPrice;
+    const percent = Math.round((saving / totalListed) * 100);
+    return { totalPrice, totalListed, saving, percent };
+  };
+
+
   useEffect(() => {
     if (id) {
       fetchProduct();
@@ -127,7 +188,12 @@ export default function ProductDetail() {
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Product Images */}
             <div className="space-y-4">
-              <div className="aspect-square bg-muted rounded-lg overflow-hidden">
+              <div className="aspect-square bg-muted rounded-lg overflow-hidden relative">
+                {product.listedPrice && product.listedPrice > product.price && (
+                  <span className="absolute top-2 right-2 z-10 px-2 py-1 rounded-lg bg-red-600 text-white text-xs font-bold shadow-lg animate-pulse">
+                    -{Math.round(100 - (product.price / product.listedPrice) * 100)}%
+                  </span>
+                )}
                 <img
                   src={product.thumbnail}
                   alt={product.name}
@@ -143,19 +209,30 @@ export default function ProductDetail() {
             <div className="space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <h1 className="text-3xl font-bold leading-tight">{product.name}</h1>
                   {product.category && (
                     <Badge variant="secondary" className="text-sm">
                       {product.category}
                     </Badge>
                   )}
+                  <h1 className="text-3xl font-bold leading-tight">{product.name}</h1>
                 </div>
                 
                 <div className="flex items-center gap-2">
                   <span className="text-3xl font-bold text-primary">
                     {formatPrice(product.price)}
                   </span>
-                  {product.badges && product.badges.length > 0 && (
+                  {product.listedPrice && product.listedPrice > product.price && (
+                    <span className="text-lg text-muted-foreground line-through">
+                      {formatPrice(product.listedPrice)}
+                    </span>
+                  )}
+                  {product.listedPrice && product.listedPrice > product.price && (
+                    <Badge variant="destructive" className="text-xs font-bold ml-2">
+                      Tiết kiệm {formatPrice(product.listedPrice - product.price)}
+                    </Badge>
+                  )}
+                </div>
+                {product.badges && product.badges.length > 0 && (
                     <div className="flex gap-1">
                       {product.badges.map((badge, index) => (
                         <Badge key={index} variant="outline" className="text-xs">
@@ -164,7 +241,6 @@ export default function ProductDetail() {
                       ))}
                     </div>
                   )}
-                </div>
 
                 {product.shortDescription && (
                   <p className="text-muted-foreground leading-relaxed">
@@ -218,6 +294,64 @@ export default function ProductDetail() {
                 </Button>
               </div>
             </div>
+          </div>
+
+          {/* --- PHẦN COMBO --- */}
+          <div className="mt-8 bg-white rounded-lg shadow p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-red-600 text-lg font-bold">🔥 Giảm thêm khi mua kèm</span>
+              {/* Tabs cho combo, demo chỉ 1 tab */}
+              <div className="flex gap-2">
+                {combos.map((combo, idx) => (
+                  <Button key={idx} variant={selectedCombo.id === combo.id ? "secondary" : "outline"} size="sm" onClick={() => setSelectedCombo(combo)}>
+                    {combo.name}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            {/* Combo sản phẩm */}
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              {selectedCombo.products.map((p) => (
+                <div key={p.id} className="bg-muted rounded-lg p-3 flex items-center w-full space-x-2">
+                  <img src={p.thumbnail} alt={p.name} className="w-16 h-16 object-cover rounded" />
+                  <div>
+                    <div className="text-sm font-semibold line-clamp-1">{p.name}</div>
+                    <div className='flex items-center space-x-2'>
+                      <div className="text-base font-bold text-primary">{formatPrice(p.price)}</div>
+                      <div className="text-xs text-muted-foreground line-through">{formatPrice(p.listedPrice)}</div>
+                    </div>
+                    <div className="text-xs text-green-600 font-semibold">
+                      Tiết kiệm: {formatPrice((p.listedPrice || p.price) - p.price)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Tổng tiền, tiết kiệm, phần trăm */}
+            {(() => {
+              const summary = getComboSummary(combos[0]);
+              return (
+                <div className="flex items-center justify-between border-t pt-4 mt-2">
+                  <div>
+                    <div className="text-lg font-bold text-primary">
+                      Tổng tiền: {formatPrice(summary.totalPrice)}
+                      <span className="text-muted-foreground text-base ml-2 line-through">{formatPrice(summary.totalListed)}</span>
+                      <span className="text-green-600 font-semibold ml-2">- {summary.percent} %</span>
+                    </div>
+                    <div className="text-green-600 font-semibold">Tiết kiệm: {formatPrice(summary.saving)}</div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="lg">
+                      <ShoppingCart className="h-5 w-5 mr-2" />
+                      Thêm vào giỏ hàng
+                    </Button>
+                    <Button variant="destructive" size="lg">
+                      Chọn mua kèm
+                    </Button>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Related Products */}

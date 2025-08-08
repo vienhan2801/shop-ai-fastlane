@@ -4,6 +4,7 @@ export interface Product {
   id: string;
   name: string;
   price: number;
+  listedPrice?: number;
   currency: 'VND';
   category: string;
   badges?: string[];
@@ -51,6 +52,7 @@ export const demoProducts: Product[] = [
     id: '1',
     name: 'Giày Chạy Bộ Nike Air Zoom Pegasus',
     price: 2490000,
+    listedPrice: 2990000,
     currency: 'VND',
     category: 'Thể thao',
     badges: ['Chính Hãng', 'Free Ship'],
@@ -65,6 +67,7 @@ export const demoProducts: Product[] = [
     id: '2',
     name: 'Túi Xách Công Sở Cao Cấp',
     price: 850000,
+    listedPrice: 990000,
     currency: 'VND',
     category: 'Phụ kiện',
     badges: ['Best Seller'],
@@ -79,6 +82,7 @@ export const demoProducts: Product[] = [
     id: '3',
     name: 'Đồng Hồ Thông Minh Apple Watch',
     price: 8990000,
+    listedPrice: 9990000,
     currency: 'VND',
     category: 'Công nghệ',
     badges: ['Chính Hãng', 'Bảo hành 12 tháng'],
