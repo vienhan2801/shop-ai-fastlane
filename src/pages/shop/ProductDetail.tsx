@@ -4,11 +4,11 @@ import { ArrowLeft, ShoppingCart, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Layout } from '@/components/Layout';
 import { Product } from '@/lib/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/hooks/useCart';
+import { ChatInterface } from '@/components/ChatInterface';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -78,45 +78,73 @@ export default function ProductDetail() {
     }
   };
 
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(price);
+  };
+
   if (loading) {
     return (
-      <Layout type="customer">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Loading product...</div>
+      <div className="h-screen flex bg-background">
+        <div className="w-1/3">
+          <ChatInterface />
         </div>
-      </Layout>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-lg text-muted-foreground">Đang tải sản phẩm...</div>
+        </div>
+      </div>
     );
   }
 
   if (!product) {
     return (
-      <Layout type="customer">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
-            <Link to="/shop">
+      <div className="h-screen flex bg-background">
+        <div className="w-1/3">
+          <ChatInterface />
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <h1 className="text-2xl font-bold">Không tìm thấy sản phẩm</h1>
+            <Link to="/">
               <Button>
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Shop
+                Quay lại trang chủ
               </Button>
             </Link>
           </div>
         </div>
-      </Layout>
+      </div>
     );
   }
 
   return (
-    <Layout type="customer">
-      <div className="container mx-auto px-4 py-8">
-        <div className="space-y-6">
-          <Link to="/shop">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Shop
-            </Button>
-          </Link>
+    <div className="h-screen flex bg-background">
+      {/* Left Column - Sticky AI Chat Interface */}
+      <div className="w-1/3">
+        <ChatInterface />
+      </div>
 
+      {/* Right Column - Product Detail */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Header */}
+        <div className="p-6 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex items-center justify-between">
+            <Link to="/">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Quay lại trang chủ
+              </Button>
+            </Link>
+            <h1 className="text-2xl font-bold">Chi tiết sản phẩm</h1>
+            <div></div>
+          </div>
+        </div>
+
+        {/* Product Content */}
+        <div className="p-6 space-y-8">
+          {/* Product Main Info */}
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Product Images */}
             <div className="space-y-4">
@@ -129,19 +157,19 @@ export default function ProductDetail() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                    No Image Available
+                    Không có hình ảnh
                   </div>
                 )}
               </div>
               
               {product.images && product.images.length > 1 && (
-                <div className="flex space-x-2">
+                <div className="flex space-x-2 overflow-x-auto">
                   {product.images.map((image, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedImage(index)}
-                      className={`w-20 h-20 rounded-lg overflow-hidden border-2 ${
-                        selectedImage === index ? 'border-primary' : 'border-transparent'
+                      className={`w-20 h-20 rounded-lg overflow-hidden border-2 shrink-0 ${
+                        selectedImage === index ? 'border-primary' : 'border-border'
                       }`}
                     >
                       <img
@@ -157,16 +185,30 @@ export default function ProductDetail() {
 
             {/* Product Info */}
             <div className="space-y-6">
-              <div>
-                <div className="flex items-center space-x-2 mb-2">
-                  <h1 className="text-3xl font-bold">{product.name}</h1>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h1 className="text-3xl font-bold leading-tight">{product.name}</h1>
                   {product.category && (
-                    <Badge variant="secondary">{product.category}</Badge>
+                    <Badge variant="secondary" className="text-sm">
+                      {product.category}
+                    </Badge>
                   )}
                 </div>
-                <div className="text-3xl font-bold text-primary mb-4">
-                  ${product.price.toFixed(2)}
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-3xl font-bold text-primary">
+                    {formatPrice(product.price)}
+                  </span>
+                  <div className="flex gap-1">
+                    <Badge variant="outline" className="text-xs">
+                      Chính Hãng
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      Free Ship
+                    </Badge>
+                  </div>
                 </div>
+
                 {product.description && (
                   <p className="text-muted-foreground leading-relaxed">
                     {product.description}
@@ -174,14 +216,14 @@ export default function ProductDetail() {
                 )}
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-4 border-t border-border pt-4">
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-muted-foreground">In Stock:</span>
-                  <span className="font-medium">{product.stock} units</span>
+                  <span className="text-sm text-muted-foreground">Tồn kho:</span>
+                  <span className="font-medium">{product.stock} sản phẩm</span>
                 </div>
 
                 <div className="flex items-center space-x-4">
-                  <span className="text-sm font-medium">Quantity:</span>
+                  <span className="text-sm font-medium">Số lượng:</span>
                   <div className="flex items-center space-x-2">
                     <Button
                       size="sm"
@@ -210,7 +252,7 @@ export default function ProductDetail() {
                   disabled={product.stock === 0}
                 >
                   <ShoppingCart className="h-5 w-5 mr-2" />
-                  {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                  {product.stock === 0 ? 'Hết hàng' : 'Thêm vào giỏ hàng'}
                 </Button>
               </div>
             </div>
@@ -218,29 +260,43 @@ export default function ProductDetail() {
 
           {/* Related Products */}
           {relatedProducts.length > 0 && (
-            <div className="space-y-4">
-              <h2 className="text-2xl font-bold">Related Products</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-4 border-t border-border pt-8">
+              <h2 className="text-2xl font-bold">Sản phẩm liên quan</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {relatedProducts.map((relatedProduct) => (
-                  <Card key={relatedProduct.id} className="overflow-hidden">
+                  <Card 
+                    key={relatedProduct.id} 
+                    className="group overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer"
+                  >
                     <Link to={`/product/${relatedProduct.id}`}>
                       <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
                         {relatedProduct.images && relatedProduct.images.length > 0 ? (
                           <img
                             src={relatedProduct.images[0]}
                             alt={relatedProduct.name}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
-                          <div className="text-muted-foreground">No Image</div>
+                          <div className="text-muted-foreground">Không có hình ảnh</div>
                         )}
                       </div>
                     </Link>
                     <CardContent className="p-4">
-                      <h3 className="font-semibold line-clamp-1">{relatedProduct.name}</h3>
-                      <p className="text-lg font-bold text-primary">
-                        ${relatedProduct.price.toFixed(2)}
-                      </p>
+                      <div className="space-y-2">
+                        <h3 className="font-semibold text-sm line-clamp-2 leading-tight">
+                          {relatedProduct.name}
+                        </h3>
+                        <div className="flex items-center justify-between">
+                          <span className="text-lg font-bold text-primary">
+                            {formatPrice(relatedProduct.price)}
+                          </span>
+                          <div className="flex gap-1">
+                            <Badge variant="outline" className="text-xs">
+                              Chính Hãng
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -249,6 +305,6 @@ export default function ProductDetail() {
           )}
         </div>
       </div>
-    </Layout>
+    </div>
   );
 }
