@@ -13,14 +13,25 @@ export default function Shop() {
   const navigate = useNavigate();
   const { survey, products, reset } = useAppStore();
   const [loading, setLoading] = useState(true);
+  const [filterLoading, setFilterLoading] = useState(false); // Added for filter loading
   const { toast } = useToast();
   const { addToCart } = useCart();
+  const [filter, setFilter] = useState<string>('');
 
   useEffect(() => {
-    // Simulate loading time
+    // Simulate initial loading
     const timer = setTimeout(() => setLoading(false), 500);
     return () => clearTimeout(timer);
   }, []);
+
+  // Handle filter changes with loading
+  useEffect(() => {
+    if (filter) {
+      setFilterLoading(true);
+      const timer = setTimeout(() => setFilterLoading(false), 500); // Simulate filter loading
+      return () => clearTimeout(timer);
+    }
+  }, [filter]);
 
   const handleAddToCart = (product: Product) => {
     addToCart(product);
@@ -42,11 +53,19 @@ export default function Shop() {
     navigate('/onboard');
   };
 
+  const filteredProducts = filter
+    ? products.filter(
+        (p) =>
+          p.category.toLowerCase().includes(filter.toLowerCase()) ||
+          p.name.toLowerCase().includes(filter.toLowerCase())
+      )
+    : products;
+
   return (
     <div className="h-screen flex bg-background">
       {/* Left Column - Sticky AI Chat Interface */}
       <div className="w-1/3">
-        <ChatInterface />
+        <ChatInterface onSelectSuggestion={setFilter} />
       </div>
 
       {/* Right Column - Product Grid */}
@@ -67,7 +86,7 @@ export default function Shop() {
             </div>
             
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" title="Refresh">
+              {/* <Button variant="ghost" size="icon" title="Refresh">
                 <RotateCcw className="w-4 h-4" />
               </Button>
               <Button variant="ghost" size="icon" title="Fullscreen">
@@ -75,7 +94,7 @@ export default function Shop() {
               </Button>
               <Button variant="ghost" size="icon" title="Close">
                 <X className="w-4 h-4" />
-              </Button>
+              </Button> */}
               <Button variant="outline" onClick={handleReset}>
                 Tạo lại từ đầu
               </Button>
@@ -89,13 +108,18 @@ export default function Shop() {
 
         {/* Product Grid */}
         <div className="p-6">
-          {loading ? (
+          {loading || filterLoading ? (
             <div className="flex items-center justify-center h-64">
-              <div className="text-lg text-muted-foreground">Đang tải sản phẩm...</div>
+              <div className="text-lg text-muted-foreground">
+                {loading ? 'Đang tải sản phẩm...' : 'Đang lọc sản phẩm...'}
+                <div className="mt-4 flex justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
-              {products.map((product) => (
+              {filteredProducts.map((product) => (
                 <Card 
                   key={product.id} 
                   className="group overflow-hidden hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer"
@@ -186,7 +210,7 @@ export default function Shop() {
             </div>
           )}
 
-          {products.length === 0 && !loading && (
+          {products.length === 0 && !loading && !filterLoading && (
             <div className="text-center py-12">
               <p className="text-lg text-muted-foreground">Không có sản phẩm nào</p>
               <Button variant="outline" className="mt-4" onClick={handleReset}>
