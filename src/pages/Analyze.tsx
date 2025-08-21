@@ -16,7 +16,7 @@ interface AnalysisStep {
   timestamp?: string;
 }
 
-const analysisSteps: AnalysisStep[] = [
+const initialSteps: AnalysisStep[] = [
   { id: '1', title: 'Kiểm tra cấu trúc file & cột bắt buộc', completed: false },
   { id: '2', title: 'Phân tích danh mục – mapping category', completed: false },
   { id: '3', title: 'Chuẩn hoá giá & số lượng tồn kho', completed: false },
@@ -31,9 +31,9 @@ export default function Analyze() {
   const navigate = useNavigate();
   const { survey, uploadedFile, setProducts } = useAppStore();
   
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [steps, setSteps] = useState<AnalysisStep[]>(analysisSteps);
+  const [steps, setSteps] = useState<AnalysisStep[]>(initialSteps);
   const [logs, setLogs] = useState<string[]>([]);
   const [isComplete, setIsComplete] = useState(false);
   const [stats, setStats] = useState({ validProducts: 0, skipped: 0 });
@@ -42,82 +42,75 @@ export default function Analyze() {
     // If no survey data, load demo and continue
     if (!survey) {
       setProducts(demoProducts);
-      startAnalysis();
-      return;
     }
+  }, [survey, setProducts]);
 
-    startAnalysis();
-  }, []);
+  useEffect(() => {
+    if (currentStepIndex < steps.length) {
+      const timer = setTimeout(() => {
+        processStep(currentStepIndex);
+      }, currentStepIndex === 0 ? 100 : 1200);
+
+      return () => clearTimeout(timer);
+    }
+  }, [currentStepIndex, steps.length]);
 
   const addLog = (message: string) => {
     setLogs(prev => [...prev, `${new Date().toLocaleTimeString('vi-VN')}: ${message}`]);
   };
 
-  const startAnalysis = () => {
-    let stepIndex = 0;
+  const processStep = (stepIndex: number) => {
+    // Update step completion
+    setSteps(prev => prev.map((step, idx) => 
+      idx === stepIndex 
+        ? { ...step, completed: true, timestamp: new Date().toLocaleTimeString('vi-VN') }
+        : step
+    ));
     
-    const processStep = () => {
-      if (stepIndex >= analysisSteps.length) {
-        setIsComplete(true);
-        setProgress(100);
-        setTimeout(() => {
-          navigate('/shop');
-        }, 800);
-        return;
-      }
-
-      const step = analysisSteps[stepIndex];
-      const delay = Math.random() * 400 + 800; // 800-1200ms
-      
+    // Add relevant log messages
+    switch (stepIndex) {
+      case 0:
+        addLog(uploadedFile ? `Đã đọc file ${uploadedFile.name}` : 'Sử dụng dữ liệu demo');
+        break;
+      case 1:
+        addLog('Phân loại sản phẩm theo danh mục...');
+        break;
+      case 2:
+        addLog('Chuẩn hoá giá VND...');
+        setStats({ validProducts: 10, skipped: 0 });
+        break;
+      case 3:
+        addLog(`Tối ưu mô tả theo tone: ${survey?.brandTone || 'Thân thiện'}...`);
+        break;
+      case 4:
+        addLog('Tối ưu kích thước ảnh sản phẩm...');
+        break;
+      case 5:
+        addLog('Tạo badge tự động...');
+        break;
+      case 6:
+        addLog('Phân tích sản phẩm liên quan...');
+        break;
+      case 7:
+        addLog('Hoàn tất dựng Mini Shop!');
+        processUploadedFile();
+        break;
+    }
+    
+    // Update progress
+    const newProgress = ((stepIndex + 1) / steps.length) * 100;
+    setProgress(newProgress);
+    
+    // Move to next step or complete
+    if (stepIndex < steps.length - 1) {
+      setCurrentStepIndex(stepIndex + 1);
+    } else {
+      setIsComplete(true);
+      setProgress(100);
       setTimeout(() => {
-        // Update step completion
-        setSteps(prev => prev.map((s, idx) => 
-          idx === stepIndex 
-            ? { ...s, completed: true, timestamp: new Date().toLocaleTimeString('vi-VN') }
-            : s
-        ));
-        
-        // Add relevant log messages
-        switch (stepIndex) {
-          case 0:
-            addLog(uploadedFile ? `Đã đọc file ${uploadedFile.name}` : 'Sử dụng dữ liệu demo');
-            break;
-          case 1:
-            addLog('Phân loại sản phẩm theo danh mục...');
-            break;
-          case 2:
-            addLog('Chuẩn hoá giá VND...');
-            setStats({ validProducts: 10, skipped: 0 });
-            break;
-          case 3:
-            addLog(`Tối ưu mô tả theo tone: ${survey?.brandTone || 'Thân thiện'}...`);
-            break;
-          case 4:
-            addLog('Tối ưu kích thước ảnh sản phẩm...');
-            break;
-          case 5:
-            addLog('Tạo badge tự động...');
-            break;
-          case 6:
-            addLog('Phân tích sản phẩm liên quan...');
-            break;
-          case 7:
-            addLog('Hoàn tất dựng Mini Shop!');
-            processUploadedFile();
-            break;
-        }
-        
-        // Update progress
-        const newProgress = ((stepIndex + 1) / analysisSteps.length) * 100;
-        setProgress(newProgress);
-        setCurrentStep(stepIndex + 1);
-        
-        stepIndex++;
-        processStep();
-      }, delay);
-    };
-
-    processStep();
+        navigate('/shop');
+      }, 800);
+    }
   };
 
   const processUploadedFile = () => {
@@ -181,7 +174,7 @@ export default function Analyze() {
               <div>
                 <CardTitle>Tiến trình xử lý</CardTitle>
                 <CardDescription>
-                  Shop: {survey?.shopName || 'Mini Shop Demo'} • Ngành: {survey?.industry || 'Tổng hợp'}
+                  Shop: {survey?.shopName || 'Mini Shop Prometheus'} • Ngành: {survey?.industry || 'Tổng hợp'}
                 </CardDescription>
               </div>
               <Badge variant="secondary">{Math.round(progress)}%</Badge>
@@ -193,7 +186,7 @@ export default function Analyze() {
             <div className="space-y-2">
               <Progress value={progress} className="h-3" />
               <p className="text-center text-sm text-muted-foreground">
-                {isComplete ? 'Hoàn thành!' : `Bước ${currentStep}/${analysisSteps.length}`}
+                {isComplete ? 'Hoàn thành!' : `Bước ${currentStepIndex + 1}/${steps.length}`}
               </p>
             </div>
 
@@ -204,7 +197,7 @@ export default function Analyze() {
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
                     step.completed 
                       ? 'bg-green-500 text-white' 
-                      : index === currentStep 
+                      : index === currentStepIndex
                         ? 'bg-primary text-primary-foreground animate-pulse'
                         : 'bg-muted text-muted-foreground'
                   }`}>
@@ -215,7 +208,7 @@ export default function Analyze() {
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className={`text-sm ${step.completed ? 'font-medium' : ''}`}>
+                    <p className={`text-sm ${step.completed || index === currentStepIndex ? 'font-medium' : ''}`}>
                       {step.title}
                     </p>
                     {step.timestamp && (

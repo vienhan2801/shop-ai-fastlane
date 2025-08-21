@@ -9,6 +9,13 @@ import { useCart } from '@/hooks/useCart';
 import { ChatInterface } from '@/components/ChatInterface';
 import { useAppStore, Product } from '@/lib/store';
 
+interface PurchaseHistoryItem {
+  productId: string;
+  price: number;
+  timestamp: Date;
+  attribute: string; // Thông tin đặc trưng: size, màu sắc, phiên bản, v.v.
+}
+
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const { products } = useAppStore();
@@ -16,9 +23,66 @@ export default function ProductDetail() {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  // const [selectedImage, setSelectedImage] = useState(0);
   const { toast } = useToast();
   const { addToCart } = useCart();
+
+  // Dữ liệu giả lập lịch sử mua hàng cho tất cả sản phẩm trong demoProducts
+  const mockPurchaseHistory: PurchaseHistoryItem[] = [
+    {
+      productId: '1', // Giày Chạy Bộ Nike Air Zoom Pegasus
+      price: 2490000,
+      timestamp: new Date('2025-08-20T14:30:00'),
+      attribute: 'Size 42',
+    },
+    {
+      productId: '2', // Bình Nước Thể Thao Lock&Lock
+      price: 190000,
+      timestamp: new Date('2025-08-19T10:15:00'),
+      attribute: 'Màu xanh dương',
+    },
+    {
+      productId: '3', // Áo Thun Thể Thao Adidas
+      price: 450000,
+      timestamp: new Date('2025-08-18T09:00:00'),
+      attribute: 'Size L',
+    },
+    {
+      productId: '4', // Túi Xách Công Sở Da Thật
+      price: 850000,
+      timestamp: new Date('2025-08-17T15:45:00'),
+      attribute: 'Màu đen',
+    },
+    {
+      productId: '5', // Balo Laptop Công Sở Xiaomi
+      price: 650000,
+      timestamp: new Date('2025-08-16T11:30:00'),
+      attribute: 'Màu xám',
+    },
+    {
+      productId: '6', // Ví Da Nam Công Sở
+      price: 390000,
+      timestamp: new Date('2025-08-15T08:20:00'),
+      attribute: 'Màu nâu',
+    },
+    {
+      productId: '7', // Tai Nghe Bluetooth Sony WH-CH510
+      price: 1190000,
+      timestamp: new Date('2025-08-14T16:10:00'),
+      attribute: 'Phiên bản Bluetooth 5.0',
+    },
+    {
+      productId: '8', // Đồng Hồ Thông Minh Apple Watch
+      price: 8990000,
+      timestamp: new Date('2025-08-13T13:25:00'),
+      attribute: 'Dung lượng 32GB',
+    },
+    {
+      productId: '9', // Chuột Không Dây Logitech M331
+      price: 350000,
+      timestamp: new Date('2025-08-12T10:00:00'),
+      attribute: 'Màu đen',
+    },
+  ];
 
   const combos = [
     {
@@ -80,7 +144,6 @@ export default function ProductDetail() {
     return { totalPrice, totalListed, saving, percent };
   };
 
-
   useEffect(() => {
     if (id) {
       fetchProduct();
@@ -91,8 +154,6 @@ export default function ProductDetail() {
     const foundProduct = products.find(p => p.id === id);
     if (foundProduct) {
       setProduct(foundProduct);
-      
-      // Get related products
       const related = products
         .filter(p => p.id !== id && p.category === foundProduct.category)
         .slice(0, 4);
@@ -105,8 +166,8 @@ export default function ProductDetail() {
     if (product) {
       addToCart(product, quantity);
       toast({
-        title: 'Added to cart',
-        description: `${quantity} ${product.name}(s) added to your cart`
+        title: 'Đã thêm vào giỏ hàng',
+        description: `${quantity} ${product.name}(s) đã được thêm vào giỏ hàng của bạn`,
       });
     }
   };
@@ -125,11 +186,14 @@ export default function ProductDetail() {
     }).format(price);
   };
 
+  // Lấy lần mua gần nhất từ mockPurchaseHistory
+  const lastPurchase = mockPurchaseHistory.find(item => item.productId === id) || null;
+
   if (loading) {
     return (
       <div className="h-screen flex bg-background">
         <div className="w-1/3">
-          <ChatInterface />
+          <ChatInterface onSelectSuggestion={() => {}} />
         </div>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-lg text-muted-foreground">Đang tải sản phẩm...</div>
@@ -142,7 +206,7 @@ export default function ProductDetail() {
     return (
       <div className="h-screen flex bg-background">
         <div className="w-1/3">
-          <ChatInterface />
+          <ChatInterface onSelectSuggestion={() => {}} />
         </div>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-4">
@@ -161,14 +225,10 @@ export default function ProductDetail() {
 
   return (
     <div className="h-screen flex bg-background">
-      {/* Left Column - Sticky AI Chat Interface */}
       <div className="w-1/3">
-        <ChatInterface />
+        <ChatInterface onSelectSuggestion={() => {}} product={product} lastPurchase={lastPurchase} />
       </div>
-
-      {/* Right Column - Product Detail */}
       <div className="flex-1 overflow-y-auto">
-        {/* Header */}
         <div className="p-6 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex items-center justify-between">
             <Link to="/shop">
@@ -181,12 +241,8 @@ export default function ProductDetail() {
             <div></div>
           </div>
         </div>
-
-        {/* Product Content */}
         <div className="p-6 space-y-8">
-          {/* Product Main Info */}
           <div className="grid lg:grid-cols-2 gap-8">
-            {/* Product Images */}
             <div className="space-y-4">
               <div className="aspect-square bg-muted rounded-lg overflow-hidden relative">
                 {product.listedPrice && product.listedPrice > product.price && (
@@ -204,8 +260,6 @@ export default function ProductDetail() {
                 />
               </div>
             </div>
-
-            {/* Product Info */}
             <div className="space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -216,7 +270,6 @@ export default function ProductDetail() {
                   )}
                   <h1 className="text-3xl font-bold leading-tight">{product.name}</h1>
                 </div>
-                
                 <div className="flex items-center gap-2">
                   <span className="text-3xl font-bold text-primary">
                     {formatPrice(product.price)}
@@ -233,15 +286,14 @@ export default function ProductDetail() {
                   )}
                 </div>
                 {product.badges && product.badges.length > 0 && (
-                    <div className="flex gap-1">
-                      {product.badges.map((badge, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {badge}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-
+                  <div className="flex gap-1">
+                    {product.badges.map((badge, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {badge}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
                 {product.shortDescription && (
                   <p className="text-muted-foreground leading-relaxed">
                     {product.shortDescription}
@@ -253,13 +305,11 @@ export default function ProductDetail() {
                   </p>
                 )}
               </div>
-
               <div className="space-y-4 border-t border-border pt-4">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-muted-foreground">Tồn kho:</span>
                   <span className="font-medium">{product.stock} sản phẩm</span>
                 </div>
-
                 <div className="flex items-center space-x-4">
                   <span className="text-sm font-medium">Số lượng:</span>
                   <div className="flex items-center space-x-2">
@@ -282,7 +332,6 @@ export default function ProductDetail() {
                     </Button>
                   </div>
                 </div>
-
                 <Button
                   size="lg"
                   className="w-full"
@@ -295,12 +344,9 @@ export default function ProductDetail() {
               </div>
             </div>
           </div>
-
-          {/* --- PHẦN COMBO --- */}
           <div className="mt-8 bg-white rounded-lg shadow p-6">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-red-600 text-lg font-bold">🔥 Giảm thêm khi mua kèm</span>
-              {/* Tabs cho combo, demo chỉ 1 tab */}
               <div className="flex gap-2">
                 {combos.map((combo, idx) => (
                   <Button key={idx} variant={selectedCombo.id === combo.id ? "secondary" : "outline"} size="sm" onClick={() => setSelectedCombo(combo)}>
@@ -309,7 +355,6 @@ export default function ProductDetail() {
                 ))}
               </div>
             </div>
-            {/* Combo sản phẩm */}
             <div className="grid grid-cols-3 gap-4 mb-4">
               {selectedCombo.products.map((p) => (
                 <div key={p.id} className="bg-muted rounded-lg p-3 flex items-center w-full space-x-2">
@@ -327,7 +372,6 @@ export default function ProductDetail() {
                 </div>
               ))}
             </div>
-            {/* Tổng tiền, tiết kiệm, phần trăm */}
             {(() => {
               const summary = getComboSummary(combos[0]);
               return (
@@ -353,8 +397,6 @@ export default function ProductDetail() {
               );
             })()}
           </div>
-
-          {/* Related Products */}
           {relatedProducts.length > 0 && (
             <div className="space-y-4 border-t border-border pt-8">
               <h2 className="text-2xl font-bold">Sản phẩm liên quan</h2>

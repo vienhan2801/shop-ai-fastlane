@@ -105,7 +105,7 @@ export default function Onboard() {
 
   const handleSkipDemo = () => {
     setSurvey({
-      shopName: 'Mini Shop Demo',
+      shopName: 'Mini Shop Prometheus',
       industry: 'Tổng hợp',
       brandTone: 'Thân thiện',
       currency: 'VND',

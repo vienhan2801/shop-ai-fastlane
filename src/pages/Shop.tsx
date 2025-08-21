@@ -13,7 +13,7 @@ export default function Shop() {
   const navigate = useNavigate();
   const { survey, products, reset } = useAppStore();
   const [loading, setLoading] = useState(true);
-  const [filterLoading, setFilterLoading] = useState(false); // Added for filter loading
+  const [filterLoading, setFilterLoading] = useState(false);
   const { toast } = useToast();
   const { addToCart } = useCart();
   const [filter, setFilter] = useState<string>('');
@@ -28,7 +28,7 @@ export default function Shop() {
   useEffect(() => {
     if (filter) {
       setFilterLoading(true);
-      const timer = setTimeout(() => setFilterLoading(false), 500); // Simulate filter loading
+      const timer = setTimeout(() => setFilterLoading(false), 500);
       return () => clearTimeout(timer);
     }
   }, [filter]);
@@ -54,11 +54,22 @@ export default function Shop() {
   };
 
   const filteredProducts = filter
-    ? products.filter(
-        (p) =>
-          p.category.toLowerCase().includes(filter.toLowerCase()) ||
-          p.name.toLowerCase().includes(filter.toLowerCase())
-      )
+    ? products.filter((p) => {
+        const lowercaseFilter = filter.toLowerCase();
+        if (lowercaseFilter === 'sản phẩm khuyến mãi') {
+          return p.listedPrice && p.listedPrice > p.price && p.price > 0;
+        }
+        if (lowercaseFilter === 'sản phẩm hot') {
+          return p.badges?.some((badge) => badge.toLowerCase() === 'hot');
+        }
+        if (lowercaseFilter === 'sản phẩm best seller') {
+          return p.badges?.some((badge) => badge.toLowerCase() === 'best seller');
+        }
+        return (
+          p.category.toLowerCase().includes(lowercaseFilter) ||
+          p.name.toLowerCase().includes(lowercaseFilter)
+        );
+      })
     : products;
 
   return (
@@ -78,7 +89,7 @@ export default function Shop() {
                 <ArrowLeft className="w-4 h-4" />
               </Button>
               <div>
-                <h1 className="text-2xl font-bold">{survey?.shopName || 'Mini Shop AI'}</h1>
+                <h1 className="text-2xl font-bold">{survey?.shopName || 'Mini Shop Prometheus'}</h1>
                 <p className="text-sm text-muted-foreground">
                   {survey?.industry || 'Tổng hợp'} • {products.length} sản phẩm
                 </p>
@@ -86,15 +97,6 @@ export default function Shop() {
             </div>
             
             <div className="flex items-center gap-2">
-              {/* <Button variant="ghost" size="icon" title="Refresh">
-                <RotateCcw className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="icon" title="Fullscreen">
-                <Maximize className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="icon" title="Close">
-                <X className="w-4 h-4" />
-              </Button> */}
               <Button variant="outline" onClick={handleReset}>
                 Tạo lại từ đầu
               </Button>
