@@ -60,7 +60,7 @@ export function ChatInterface({ onSelectSuggestion, product, lastPurchase }: Cha
       if (lastPurchase) {
         const historyMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
-          content: `Hiện sản phẩm bạn đang xem vẫn còn size 42 tương tự với giày Nike bạn mua lần gần nhất, mình giúp bạn thêm vào giỏ hàng nhé! 😍`,
+          content: `Hiện sản phẩm bạn đang xem vẫn còn size L tương tự với áo Nike bạn mua lần gần nhất, mình giúp bạn thêm vào giỏ hàng nhé! 😍`,
           isBot: true,
           timestamp: new Date(),
         };
