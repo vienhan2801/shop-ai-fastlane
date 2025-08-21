@@ -278,6 +278,19 @@ export default function Onboard() {
                       </div>
                     </div>
                   )}
+
+                  <div className='grid grid-cols-5 items-center gap-4'>
+                    <img src="/pancake.png" alt="pancake" className='max-h-20'/>
+                    <img src="/airtable.png" alt="airtable" className='max-h-20' />
+                    <img src="/shopee.png" alt="pancake" className='max-h-20' />
+                    <img src="/google-sheet.png" alt="pancake" className='max-h-20' />
+                    <img src="/kiot-viet.png" alt="pancake" className='max-h-20' />
+                    <img src="/haravan.png" alt="pancake" className='max-h-20' />
+                    <img src="/misa.png" alt="pancake" className='max-h-20' />
+                    <img src="/nhanh-vn.png" alt="pancake" className='max-h-20' />
+                    <img src="/sapo.png" alt="pancake" className='max-h-20' />
+                    <img src="/wordpress.png" alt="pancake" className='max-h-20' />
+                  </div>
                 </div>
               </div>
             </div>

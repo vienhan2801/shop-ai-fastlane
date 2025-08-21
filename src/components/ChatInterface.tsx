@@ -27,7 +27,7 @@ interface ChatInterfaceProps {
 const initialMessages: ChatMessage[] = [
   {
     id: '1',
-    content: 'Xin chào! Mình là trợ lý AI của bạn tại Mini Shop. Bạn cần tìm sản phẩm nào hôm nay? 😊',
+    content: 'Xin chào! Mình là trợ lý AI của bạn tại Mini Shop Prometheus. Bạn cần tìm sản phẩm nào hôm nay? 😊',
     isBot: true,
     timestamp: new Date(),
   },
@@ -50,7 +50,7 @@ export function ChatInterface({ onSelectSuggestion, product, lastPurchase }: Cha
     if (product) {
       const welcomeMessage: ChatMessage = {
         id: Date.now().toString(),
-        content: `Bạn đang xem sản phẩm ${product.name}... Bạn muốn tìm hiểu thêm về sản phẩm này hay khám phá các sản phẩm tương tự?`,
+        content: `Bạn đang xem sản phẩm "${product.name} là top sản phẩm bán rất chạy của shop mình. Hiện chỉ còn 60 cái, nếu bạn mua ngay mình xin tặng thêm voucher khuyến mãi "Freeship" nhé! 😊`,
         isBot: true,
         timestamp: new Date(),
       };
@@ -60,7 +60,7 @@ export function ChatInterface({ onSelectSuggestion, product, lastPurchase }: Cha
       if (lastPurchase) {
         const historyMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
-          content: `Bạn đã mua sản phẩm này vào ${lastPurchase.timestamp.toLocaleString('vi-VN')} với giá ${formatPrice(lastPurchase.price)} (${lastPurchase.attribute}). Bạn có muốn mua lại?`,
+          content: `Hiện sản phẩm bạn đang xem vẫn còn size 42 tương tự với giày Nike bạn mua lần gần nhất, mình giúp bạn thêm vào giỏ hàng nhé! 😍`,
           isBot: true,
           timestamp: new Date(),
         };
@@ -113,7 +113,7 @@ export function ChatInterface({ onSelectSuggestion, product, lastPurchase }: Cha
     setTimeout(() => {
       const botMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: `Khám phá ngay ${keyword} với chất lượng vượt trội từ Mini Shop! Bạn muốn tìm thêm sản phẩm nào nữa?`,
+        content: `Mình đã tổng hợp đầy đủ các thông tin ${keyword} như bạn đã yêu cầu, bạn hãy xem qua. Bạn cần mình hỗ trợ thêm gì nữa không? 😊`,
         isBot: true,
         timestamp: new Date(),
       };
@@ -124,14 +124,14 @@ export function ChatInterface({ onSelectSuggestion, product, lastPurchase }: Cha
         setTimeout(() => {
           const additionalBotMessage: ChatMessage = {
             id: (Date.now() + 2).toString(),
-            content: `Ngoài ra, bạn đã thử khám phá ${otherSuggestion.text} chưa? Những món này đang rất được ưa chuộng đấy!`,
+            content: `Sản phẩm "Áo Thun Thể Thao Adidas" đang có khuyến mãi giảm giá cực tốt đang được bán rất chạy và được đánh giá tốt. Bạn hãy tham khảo thử xem nhé! 😌`,
             isBot: true,
             timestamp: new Date(),
           };
           setChatMessages((prev) => [...prev, additionalBotMessage]);
           setShowSuggestions(true);
           setIsBotLoading(false);
-        }, 1000);
+        }, 5000);
       } else {
         setShowSuggestions(true);
         setIsBotLoading(false);
@@ -155,7 +155,7 @@ export function ChatInterface({ onSelectSuggestion, product, lastPurchase }: Cha
     setTimeout(() => {
       const botMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: `Khám phá ngay ${suggestion.keyword} với chất lượng vượt trội từ Mini Shop! Bạn muốn tìm thêm sản phẩm nào nữa?`,
+        content: `Mình đã tổng hợp đầy đủ các thông tin ${suggestion.keyword} như bạn đã yêu cầu, bạn hãy xem qua. Bạn cần mình hỗ trợ thêm gì nữa không? 😊`,
         isBot: true,
         timestamp: new Date(),
       };
@@ -166,14 +166,14 @@ export function ChatInterface({ onSelectSuggestion, product, lastPurchase }: Cha
         setTimeout(() => {
           const additionalBotMessage: ChatMessage = {
             id: (Date.now() + 2).toString(),
-            content: `Ngoài ra, bạn đã thử khám phá ${otherSuggestion.text} chưa? Những món này đang rất được ưa chuộng đấy!`,
+            content: `Sản phẩm "Áo Thun Thể Thao Adidas" đang có khuyến mãi giảm giá cực tốt đang được bán rất chạy và được đánh giá tốt. Bạn hãy tham khảo thử xem nhé! 😊`,
             isBot: true,
             timestamp: new Date(),
           };
           setChatMessages((prev) => [...prev, additionalBotMessage]);
           setShowSuggestions(true);
           setIsBotLoading(false);
-        }, 1000);
+        }, 5000);
       } else {
         setShowSuggestions(true);
         setIsBotLoading(false);
